@@ -1,0 +1,39 @@
+:root {
+  --text: hsl(85, 85%, 5%);
+  --background: hsl(0, 0%, 100%);
+  --primary: hsl(83, 88%, 56%);
+  --secondary: hsl(83, 88%, 87%);
+  --accent: hsl(83, 88%, 36%);
+}
+
+*,
+*::before,
+*::after {
+  font-family: 'IBM Plex Sans';
+  box-sizing: border-box;
+  color: var(--text);
+}
+
+html,
+body,
+#app {
+  margin: 0;
+  height: 100%;
+  background-color: var(--background);
+}
+
+main {
+  display: flex;
+  flex-direction: column;
+  padding: 1em 3em;
+}
+
+.page-name {
+  color: var(--accent);
+  font-size: 1.25em;
+}
+
+.heading {
+  margin-top: 0.75em;
+  font-size: 2em;
+}
