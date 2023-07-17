@@ -7,9 +7,9 @@ const props = defineProps([])
 
 <template>
     <Nav />
-    
+    <div class="feedback-page">
+        
+    </div>
 </template>
 
-<style scoped>
-    
-</style>
+<style scoped></style>

@@ -2,14 +2,15 @@
 import { ref } from "vue"
 import Button from "../components/Button.vue"
 import { signIn, signUp } from "../auth"
+import router from "@/router"
 
 const toggleFormType = () => {
     formType.value = 1 - formType.value;
 }
 
 const authenticate = () => {
-    if (formType.value === 0) signIn(usernameEmail, password);
-    else signUp(username, email, password, confirmPassword);
+    if (formType.value === 0) signIn(usernameEmail.value, password.value);
+    else signUp(username.value, email.value, password.value, confirmPassword.value);
 }
 
 // 0 -> Sign In
@@ -28,7 +29,7 @@ const confirmPassword = ref("")
 <template>
     <div class="auth-page">
         <div class="form-container">
-            <div class="back-btn"><span>Back</span></div>
+            <div class="back-btn" @click="() => router.push('/')"><span>Back</span></div>
 
             <form class="form" action="" method="post" v-on:submit="(e) => e.preventDefault()">
                 <div class="form__heading">{{ formType === 0 ? "Login" : "Register" }}</div>
