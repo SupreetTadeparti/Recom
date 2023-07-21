@@ -2,25 +2,17 @@
 import { RouterLink } from 'vue-router';
 import Button from './Button.vue';
 import NavItem from './NavItem.vue';
-import { ref } from 'vue';
-import { db, auth } from "../firebase"
-import { query, where, collection, getDocs } from 'firebase/firestore';
+import { onMounted, reactive } from 'vue';
+import { getUser } from "../firebase"
 
-const authUser = auth.currentUser;
-
-let user = ref({
+let user = reactive({
     username: "..."
 });
 
-(async () => {
-    const usersRef = collection(db, "users");
-
-    const q = query(usersRef, where("id", "==", authUser.uid));
-
-    const querySnapshot = await getDocs(q);
-
-    user.value = querySnapshot.docs[0].data();
-})()
+onMounted(async () => {
+    const authUser = await getUser();
+    user.username = authUser.username
+})
 </script>
 
 <template>
@@ -40,13 +32,14 @@ let user = ref({
             <NavItem text="Feedback" url="/feedback" />
             <NavItem text="Announcements" url="/announcements" />
             <NavItem text="Events" url="/events" />
+            <NavItem text="Elect" url="/elect" />
         </div>
     </nav>
 </template>
 
 <style scoped>
 nav {
-    width: 15em;
+    min-width: min(15em, 30vw);
     display: flex;
     flex-direction: column;
     box-shadow: 0 1px 7px 0 rgba(0 0 0 / .4)
@@ -67,7 +60,11 @@ nav {
 }
 
 .username {
-    font-size: 1.4em;
+    font-size: min(4vw, 1.4em);
+}
+
+.profile-img {
+    max-width: 10vw;
 }
 
 .nav__links {
@@ -75,5 +72,6 @@ nav {
     display: flex;
     flex-direction: column;
     gap: .25em;
+    font-size: min(1em, 3vw);
 }
 </style>

@@ -216,8 +216,9 @@ section>.left {
     content: "";
     position: absolute;
     top: -1em;
-    left: 0;
-    width: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: min(50vw, 100%);
     height: .2em;
     border-radius: 2px;
     background-color: var(--primary);
@@ -410,7 +411,7 @@ section>.right>.polygon {
 }
 
 footer {
-    background-color: var(--primary);
+    background-color: var(--accent);
     color: white;
     padding: 2em 0;
     text-align: center;

@@ -1,14 +1,17 @@
-import { collection, addDoc, getDocs } from 'firebase/firestore'
-import { db, auth } from './firebase'
+import { doc, collection, setDoc, getDocs, updateDoc, arrayUnion } from 'firebase/firestore'
+import { db, auth, provider } from './firebase'
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth'
 import router from './router/index'
+import { signInWithPopup, GoogleAuthProvider } from 'firebase/auth'
 
 const signIn = async (usernameEmail, password) => {
   try {
+    // Sign in with email
     await signInWithEmailAndPassword(auth, usernameEmail, password)
     router.push({ path: '/home', replace: true })
   } catch (e) {
     if (e.code === 'auth/invalid-email') {
+      // Sign in after extracting email from user
       const querySnapshot = await getDocs(collection(db, 'users'))
 
       for (let doc of querySnapshot.docs) {
@@ -19,46 +22,68 @@ const signIn = async (usernameEmail, password) => {
             router.push('/home')
             break
           } catch (e) {
-            console.log(e.message)
+            return e.message
           }
         }
       }
+      return "User with specified username or email doesn't exist"
     } else {
-      console.log(e.message)
+      return e.message
     }
   }
 }
 
-const signUp = async (username, email, password, confirmPassword) => {
+const signUp = async (username, email, password, confirmPassword, name, community) => {
   if (password !== confirmPassword) {
-    console.log('Password do not match!')
-    return
+    return 'Passwords do not match!'
   }
 
   const querySnapshot = await getDocs(collection(db, 'users'))
 
-  for (const doc of querySnapshot.docs) {
-    if (doc.username === username || doc.email == email) {
-      console.log('Username or Email is already in use')
-      return
+  for (const userDoc of querySnapshot.docs) {
+    if (userDoc.username === username || userDoc.email == email) {
+      return 'Username or Email is already in use'
     }
   }
 
   try {
+    // Sign up
     await createUserWithEmailAndPassword(auth, email, password)
     try {
-      const doc = await addDoc(collection(db, 'users'), {
+      // Save user to db
+      await setDoc(doc(db, 'users', auth.currentUser.uid), {
         id: auth.currentUser.uid,
+        photo: false,
         username: username,
-        email: email
+        email: email,
+        community: community.id,
+        fullname: name,
+        candidate: 'NA',
+        // [President, Vice President, Treasurer, Secretary, Event Coordinator, Grievance Officer]
+        votes: [0, 0, 0, 0, 0, 0],
+        voted: ['', '', '', '', '', '']
       })
-      console.log('Document written with ID: ', doc.id)
+      // Save user to community
+      await updateDoc(doc(db, 'communities', community.id), {
+        members: arrayUnion(auth.currentUser.uid)
+      })
+
+      router.go()
     } catch (e) {
-      console.log(`Error adding document: ${e}`)
+      return `Error adding document: ${e}`
     }
   } catch (e) {
-    console.log('Something went wrong with sign up: ', error)
+    return `Something went wrong with sign up: ${e}`
   }
 }
 
-export { signIn, signUp }
+const googleSignIn = async () => {
+  try {
+    await signInWithPopup(auth, provider)
+    router.push({ path: '/home', replace: true })
+  } catch (e) {
+    console.log(e.message)
+  }
+}
+
+export { signIn, signUp, googleSignIn }

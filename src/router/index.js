@@ -1,12 +1,13 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import HomeView from '../views/HomeView.vue'
-import ChatView from '../views/ChatView.vue'
-import FeedbackView from '../views/FeedbackView.vue'
-import AnnouncementsView from '../views/AnnouncementsView.vue'
-import EventsView from '../views/EventsView.vue'
-import DonateView from '../views/DonateView.vue'
-import IndexView from '../views/IndexView.vue'
-import AuthView from '../views/AuthView.vue'
+import HomeView from '@/views/HomeView.vue'
+import ChatView from '@/views/ChatView.vue'
+import FeedbackView from '@/views/FeedbackView.vue'
+import AnnouncementsView from '@/views/AnnouncementsView.vue'
+import EventsView from '@/views/EventsView.vue'
+import DonateView from '@/views/DonateView.vue'
+import IndexView from '@/views/IndexView.vue'
+import AuthView from '@/views/AuthView.vue'
+import ElectionsView from '@/views/ElectionsView.vue'
 import { auth } from '../firebase'
 import { onAuthStateChanged } from 'firebase/auth'
 
@@ -22,7 +23,8 @@ const routes = [
   route('feedback', FeedbackView),
   route('announcements', AnnouncementsView),
   route('events', EventsView),
-  route('donate', DonateView)
+  route('donate', DonateView),
+  route('elect', ElectionsView)
 ]
 
 const router = createRouter({
