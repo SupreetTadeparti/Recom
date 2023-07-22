@@ -4,12 +4,15 @@ import { db } from "@/firebase"
 import { onSnapshot, collection } from "firebase/firestore"
 
 onSnapshot(collection(db, "users"), doc => {
-    console.log(doc.docs);
+
 })
 </script>
 
 <template>
     <Nav />
+    <main>
+        <div class="page-name">Chat</div>
+    </main>
 </template>
 
 <style scoped></style>

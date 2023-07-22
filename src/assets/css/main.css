@@ -34,6 +34,7 @@ body,
   flex-direction: column;
   position: relative;
   overflow: hidden;
+  width: 100%;
 }
 
 .page-name {

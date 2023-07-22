@@ -2,16 +2,26 @@
 import Nav from "../components/Nav.vue";
 import Button from "../components/Button.vue";
 import { onMounted, ref } from "vue";
-import { db, getCommunity, getUser, getUserRef } from "../firebase";
+import { db, getCommunity, getPhoto, getUser, getUserRef } from "../firebase";
 import { getDoc, doc, updateDoc, arrayUnion, arrayRemove, increment } from "firebase/firestore";
 
 const props = defineProps([])
 const user = ref({})
 const contestants = ref([])
+const contestantPhotos = ref([])
 const roles = ["President", "Vice President", "Treasurer", "Secretary", "Event Coordinator", "Grievance Officer"]
+const role = ref("President")
 
 const updateUser = async () => {
     user.value = await getUser();
+}
+
+const updateCandidatePhotos = async () => {
+    contestantPhotos.value = await Promise.all(
+        contestants.value.filter(candidate => candidate.candidate === role.value).map(
+            async candidate => await getPhoto(candidate)
+        )
+    )
 }
 
 const updateCandidates = async () => {
@@ -23,7 +33,10 @@ const updateCandidates = async () => {
             )).data()
         )
     )
-    contestants.value = candidates.sort((a, b) => b.votes - a.votes)
+
+    contestants.value = candidates.sort((a, b) => b.votes[roles.indexOf(role.value)] - a.votes[roles.indexOf(role.value)])
+
+    await updateCandidatePhotos();
 }
 
 onMounted(async () => {
@@ -31,18 +44,9 @@ onMounted(async () => {
     await updateCandidates();
 })
 
-const photo = (candidate) => {
-    return new URL(
-        `../assets/img/${candidate.photo ? candidate.name.toLowerCase().replace(" ", "_") : "default"
-        }.png`,
-        import.meta.url,
-    ).href
-}
-
-const role = ref("President")
-
-const roleClick = (e) => {
+const roleClick = async (e) => {
     role.value = e.target.textContent.trim();
+    await updateCandidatePhotos();
 }
 
 const voted = id => user.value.voted[roles.indexOf(role.value)] === id
@@ -136,9 +140,9 @@ const confirmModal = () => {
                 <div class="contestants-heading">Candidates</div>
                 <div class="contestants">
                     <div class="contestant"
-                        v-for="contestant in contestants.filter(contestant => contestant.candidate === role)">
+                        v-for="(contestant, idx) in contestants.filter(contestant => contestant.candidate === role)">
                         <div class="contestant__left">
-                            <img :src="photo(contestant)" alt="photo" class="contestant__photo" width="50">
+                            <img :src="contestantPhotos[idx]" alt="photo" class="contestant__photo" width="50">
                             <div class="contestant__votes">{{ contestant.votes[roles.indexOf(role)] }}</div>
                         </div>
                         <div class="contestant__right">
@@ -270,6 +274,7 @@ main {
 }
 
 .contestant__photo {
+    border-radius: 50%;
     width: 4em;
 }
 

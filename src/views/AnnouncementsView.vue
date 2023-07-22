@@ -7,8 +7,9 @@ const props = defineProps([])
 
 <template>
     <Nav />
+    <main>
+        <div class="page-name">Announcements</div>
+    </main>
 </template>
 
-<style scoped>
-    
-</style>
+<style scoped></style>

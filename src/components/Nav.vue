@@ -2,23 +2,27 @@
 import { RouterLink } from 'vue-router';
 import Button from './Button.vue';
 import NavItem from './NavItem.vue';
-import { onMounted, reactive } from 'vue';
-import { getUser } from "../firebase"
+import { onMounted, reactive, ref } from 'vue';
+import { getUser, getPhoto } from "../firebase"
 
 let user = reactive({
     username: "..."
 });
 
+const profilePhoto = ref(null)
+
 onMounted(async () => {
     const authUser = await getUser();
     user.username = authUser.username
+    const photo = await getPhoto(authUser)
+    profilePhoto.value.src = photo;
 })
 </script>
 
 <template>
     <nav>
         <div class="nav__item--big">
-            <img class="profile-img" src="@/assets/img/default.png" alt="photo" width="50">
+            <img class="profile-img" ref="profilePhoto" src="@/assets/img/default.png" alt="photo" width="50">
             <div class="username">{{ user.username }}</div>
         </div>
         <div class="nav__item--big">
@@ -65,6 +69,7 @@ nav {
 
 .profile-img {
     max-width: 10vw;
+    border-radius: 50%;
 }
 
 .nav__links {

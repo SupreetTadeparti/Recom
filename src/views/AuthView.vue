@@ -1,10 +1,11 @@
 <script setup>
 import { ref } from "vue"
-import Button from "../components/Button.vue"
-import { signIn, signUp, googleSignIn } from "../auth"
 import router from "@/router"
+import { db, storage } from "@/firebase"
+import Button from "../components/Button.vue"
+import { signIn, signUp, createUser, googleSignIn } from "../auth"
 import { getDocs, addDoc, collection, query, where } from "firebase/firestore";
-import { db } from "@/firebase"
+
 
 const toggleFormType = () => {
     formType.value = 1 - formType.value;
@@ -14,8 +15,20 @@ const togglePageNumber = () => {
     registerPage.value = 1 - registerPage.value;
 }
 
-const authenticate = async () => {
-    if (formType.value === 0) {
+const authenticate = async (google = false) => {
+    if (google) {
+        const res = await googleSignIn(username, email, fullName);
+
+        if (res === 1) return;
+
+        if (res === 2) {
+            formType.value = 1;
+            registerPage.value = 1;
+        } else {
+            errorMessage.value = res;
+        }
+    }
+    else if (formType.value === 0) {
         errorMessage.value = await signIn(usernameEmail.value, password.value);
     }
     else if (registerPage.value === 1) {
@@ -44,16 +57,24 @@ const authenticate = async () => {
 
         const community = querySnapshot.docs[0]
 
+        errorMessage.value = await createUser(
+            username.value,
+            email.value,
+            fullName.value,
+            community,
+            photoInput.value.files[0]
+        );
+    }
+    else {
         errorMessage.value = await signUp(
             username.value,
             email.value,
             password.value,
-            confirmPassword.value,
-            fullName.value,
-            community,
-        );
+            confirmPassword.value
+        )
+
+        if (!errorMessage.value) togglePageNumber();
     }
-    else togglePageNumber();
 }
 
 // 0 -> Sign In
@@ -75,6 +96,7 @@ const fullName = ref("")
 const createCommunityName = ref("")
 const createCommunityLocation = ref("")
 const errorMessage = ref("")
+const photoInput = ref(null)
 
 </script>
 
@@ -106,7 +128,8 @@ const errorMessage = ref("")
                     class="form__input" placeholder="Enter password here again...">
 
                 <label v-if="formType === 1 && registerPage === 1" class="form__label">Profile Picture</label>
-                <input v-if="formType === 1 && registerPage === 1" type="file" placeholder="Upload a photo">
+                <input ref="photoInput" v-if="formType === 1 && registerPage === 1" type="file"
+                    placeholder="Upload a photo">
 
                 <label v-if="formType === 1 && registerPage === 1" class="form__label">Full Name</label>
                 <input v-if="formType === 1 && registerPage === 1" v-model="fullName" type="text" class="form__input"
@@ -127,7 +150,7 @@ const errorMessage = ref("")
 
                 <div class="error-message">{{ errorMessage }}</div>
 
-                <Button @click="authenticate" type="submit"
+                <Button @click="authenticate(false)" type="submit"
                     :text="formType === 0 ? 'Login' : registerPage === 0 ? 'Next' : 'Register'" :thin="true" />
                 <div v-if="formType === 0" class="form__type-toggle" @click="toggleFormType">
                     Don't have an account? <span> Register here.</span>
@@ -139,7 +162,7 @@ const errorMessage = ref("")
                 <div class="or-line"><span>or</span></div>
 
                 <div class="oauth-buttons">
-                    <div @click="googleSignIn" class="oauth-button">
+                    <div @click="authenticate(true)" class="oauth-button">
                         <img src="@/assets/img/googlelogo.png" alt="google">
                         Sign in with Google
                     </div>

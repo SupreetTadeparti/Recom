@@ -1,7 +1,8 @@
 <script setup>
+import { getDoc, doc, updateDoc } from "firebase/firestore";
 import Button from "../components/Button.vue"
 import Nav from "../components/Nav.vue";
-import { getCommunity } from "../firebase";
+import { db, getCommunity, getCommunityRef, getPhoto } from "../firebase";
 import { onMounted, ref } from "vue"
 
 const community = ref({})
@@ -11,8 +12,60 @@ const headRoles = [
   "Secretary", "Event Coordinator", "Grievance Officer"
 ]
 
-const calcHeads = () => {
-  // if (community.value.headUpdateTime === )
+const heads = ref(Array(6).fill(null))
+const headPhotos = ref(Array(6).fill(null))
+
+const calcHeads = async () => {
+  const prevTimestamp = community.value.headsUpdateTime;
+  const prevDate = new Date(prevTimestamp.seconds * 1_000)
+  const currDate = new Date();
+  const timeElapsed = currDate - prevDate;
+  const timeElapsedHours = timeElapsed / (3_600_000);
+
+  if (timeElapsedHours > 24) {
+    const headVotes = Array(6).fill(0);
+    const headIds = Array(6).fill("");
+
+    const userIds = community.value.members;
+
+    for (const userId of userIds) {
+      const userDoc = await getDoc(doc(db, "users", userId.trim()));
+      const user = userDoc.data();
+
+      for (const role of headRoles) {
+        const roleIdx = headRoles.indexOf(role)
+        const userVotes = user.votes[roleIdx]
+        if (user.candidate === role && userVotes > headVotes[roleIdx]) {
+          headIds[roleIdx] = userDoc.id
+          headVotes[roleIdx] = userVotes;
+        }
+      }
+    }
+
+    const communityDoc = await getCommunityRef()
+
+    await updateDoc(communityDoc, {
+      heads: headIds
+    })
+
+    community.value = await getCommunity()
+  }
+
+  const headsTemp = []
+  const headPhotosTemp = []
+
+  for (const headId of community.value.heads) {
+    let head = null;
+    if (headId) {
+      const headDoc = await getDoc(doc(db, "users", headId));
+      head = headDoc.data()
+    }
+    headsTemp.push(head)
+    headPhotosTemp.push(await getPhoto(head))
+  }
+
+  heads.value = headsTemp
+  headPhotos.value = headPhotosTemp
 }
 
 onMounted(async () => {
@@ -31,9 +84,9 @@ onMounted(async () => {
     <div class="heading">Members</div>
     <div class="members">
       <div class="member" v-for="(role, idx) in headRoles">
-        <img src="@/assets/img/default.png" alt="">
+        <img :src="headPhotos[idx]" alt="">
         <div class="details">
-          <div class="name">{{ community.heads ? community.heads[idx] ?? "Not Elected" : "Not Elected" }}</div>
+          <div class="name">{{ heads[idx] ? heads[idx].fullname ?? "Not Elected" : "Not Elected" }}</div>
           <div class="role">{{ role }}</div>
         </div>
       </div>
@@ -57,11 +110,12 @@ main {
   column-gap: 3em;
   grid-template-rows: repeat(2, 1fr);
   grid-template-columns: repeat(3, 1fr);
-  place-items: center;
+  align-items: center;
+  width: 75%;
 }
 
 .member {
-  width: 15em;
+  min-width: 15em;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -87,6 +141,7 @@ main {
 }
 
 .member>img {
+  border-radius: 50%;
   width: 2.5em;
   aspect-ratio: 1;
 }

@@ -151,7 +151,6 @@ main {
     padding: 2em 8em;
     position: fixed;
     z-index: 15;
-    /* box-shadow: 0 2px 5px 0 rgba(0 0 0 / .25) */
 }
 
 .nav.scrolled .nav__item {
@@ -168,6 +167,9 @@ main {
     font-size: 1.3em;
     color: #666;
     transition: color 75ms;
+    padding: .5em;
+    border-radius: 100vh;
+    background-color: white;
 }
 
 .nav__item:hover {

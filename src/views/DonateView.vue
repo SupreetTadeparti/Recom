@@ -1,14 +1,13 @@
 <script setup>
 import Nav from "../components/Nav.vue";
 
-const props = defineProps([])
-
 </script>
 
 <template>
     <Nav />
-
-    Donate Here
+    <main>
+        <div class="page-name">Donate</div>
+    </main>
 </template>
 
 <style scoped></style>
